@@ -9,17 +9,17 @@ import SwiftUI
 
 struct Task: Identifiable {
     var id = UUID()
-    var fruitsName: String
+    var name: String
     var isDone: Bool
 }
 
 struct ContentView: View {
 
     @State private var tasks: [Task] = [
-        .init(fruitsName: "りんご", isDone: false),
-        .init(fruitsName: "みかん", isDone: true),
-        .init(fruitsName: "バナナ", isDone: false),
-        .init(fruitsName: "パイナップル", isDone: true)
+        .init(name: "りんご", isDone: false),
+        .init(name: "みかん", isDone: true),
+        .init(name: "バナナ", isDone: false),
+        .init(name: "パイナップル", isDone: true)
     ]
 
     @State private var isShowModal = false
@@ -35,7 +35,7 @@ struct ContentView: View {
                     }
                 }
                 .navigationBarItems(trailing: Button(action: {
-                    isShowModal.toggle()
+                    isShowModal = true
                 }) {
                     Text("+")
                         .font(.largeTitle)
@@ -43,36 +43,43 @@ struct ContentView: View {
             }
         }
         .sheet(isPresented: $isShowModal, content: {
-            TaskDetialView(isShowModal: $isShowModal, tasks: $tasks)
+            TaskDetialView(
+                didTapSave: { name in
+                    guard !name.isEmpty else { return }
+                    tasks.append(Task(name: name, isDone: false))
+                    isShowModal = false
+                },
+                didTapCancel: {
+                    isShowModal = false
+                }
+            )
         })
     }
 }
 
 struct TaskDetialView: View {
 
-    @Binding var isShowModal: Bool
-    @Binding var tasks: [Task]
 
-    @State private var fruitsName: String = ""
+    @State private var name: String = ""
+
+    let didTapSave: (String) -> Void
+    let didTapCancel: () -> Void
 
     var body: some View {
         VStack {
             HStack {
                 Button("Cancel") {
-                    isShowModal.toggle()
+                    didTapCancel()
                 }
                 Spacer()
                 Button("Save") {
-                    if !fruitsName.isEmpty {
-                        tasks.append(.init(fruitsName: fruitsName, isDone: false))
-                    }
-                    isShowModal.toggle()
+                    didTapSave(name)
                 }
             }.padding()
 
             HStack {
                 Text("名前")
-                TextField("", text: $fruitsName)
+                TextField("", text: $name)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .frame(width: 100)
             }
@@ -93,7 +100,7 @@ struct CheckViewRow: View {
             Image(systemName: "checkmark")
                 .hidden()
         }
-        Text(task.fruitsName)
+        Text(task.name)
         Spacer()
     }
 }
